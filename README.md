@@ -23,3 +23,5 @@ node --check assembly-3d.js
 The site is static HTML, CSS, and JavaScript. Serve the repository root with a static host to deploy it. Product imagery and model assets depict Apple Vision Pro; generated spatial scenes are creative concepts.
 
 Vercel is configured through `vercel.json` to serve the repository as a static site. No server-side JavaScript runtime or build step is required.
+
+Test changes 1
