@@ -28,9 +28,11 @@ function seekEye(time) {
   if (eye.readyState >= 1 && !eye.seeking && Math.abs(eye.currentTime - requestedTime) > 0.001) eye.currentTime = requestedTime;
 }
 eye.addEventListener('loadedmetadata', () => { updateEyeDuration(); seekEye(requestedTime); });
+eye.addEventListener('loadeddata', () => update(progress));
 eye.addEventListener('seeked', () => { if (Math.abs(eye.currentTime - requestedTime) > .001) seekEye(requestedTime); });
 eye.addEventListener('play', () => eye.pause());
 eyeSecond.addEventListener('loadedmetadata', () => { secondDuration = Number.isFinite(eyeSecond.duration) ? eyeSecond.duration : 5; seekSecond(secondRequestedTime); });
+eyeSecond.addEventListener('loadeddata', () => update(progress));
 eyeSecond.addEventListener('seeked', () => { if (Math.abs(eyeSecond.currentTime - secondRequestedTime) > .001) seekSecond(secondRequestedTime); });
 eyeSecond.addEventListener('play', () => eyeSecond.pause());
 eye.pause();
@@ -46,7 +48,9 @@ function update(p) {
   // Give the final camera-facing frame a longer hold before section two.
   const secondProgress = clamp((p - .285) / .365);
   const sceneBlend = smooth((p - .285) / .055);
-  set('.eye-opening', {autoAlpha: reduced ? 1 : 1 - smooth((p - .02) / .05)});
+  const eyeReady = eye.readyState >= 2;
+  const secondReady = eyeSecond.readyState >= 2;
+  set('.eye-opening', {autoAlpha: reduced || !eyeReady ? 1 : 1 - smooth((p - .02) / .05)});
   const hardwareIn = smooth((p - .65) / .065);
   const hardwareOut = smooth((p - .80) / .055);
   const portalIn = smooth((p - .84) / .055);
@@ -56,9 +60,9 @@ function update(p) {
   if (!reduced) seekSecond(secondProgress * secondDuration);
   else seekSecond(0);
   // Let the forest shot settle before fading into the physical product.
-  set('.eye-scene', {autoAlpha: 1 - smooth((p - .60) / .065)});
-  set('#eye', {opacity: 1 - sceneBlend});
-  set('#eye-second', {opacity: sceneBlend});
+  set('.eye-scene', {autoAlpha: 1 - hardwareIn});
+  set('#eye', {opacity: 1 - (secondReady ? sceneBlend : 0)});
+  set('#eye-second', {opacity: secondReady ? sceneBlend : 0});
   set('.hero-copy', {autoAlpha: 1 - smooth((p - .025) / .10), y: reduced ? 0 : -90 * smooth(p / .13)});
   set('.hardware-scene', {autoAlpha: hardwareIn * (1 - hardwareOut)});
   set('.hardware-visual', {scale: 1, xPercent: 0, opacity: 1});

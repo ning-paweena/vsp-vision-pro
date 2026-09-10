@@ -125,6 +125,8 @@ em{font-family:inherit;font-style:normal;font-weight:400;letter-spacing:-.065em}
 .eye-shade{z-index:1;background:linear-gradient(90deg,rgba(0,0,0,.48),rgba(0,0,0,.12) 60%,rgba(0,0,0,.08)),linear-gradient(0deg,rgba(0,0,0,.5),transparent 45%,rgba(0,0,0,.16))}
 .hero-copy{text-shadow:0 2px 16px rgba(0,0,0,.3)}
 .hero-bottom p{color:#ececef}
+/* Let the hero action row span the composition, with its supporting copy at the far right. */
+@media(min-width:601px){.hero-bottom{width:100%;max-width:none}.hero-bottom p{margin-left:auto}}
 /* Fill the hero viewport edge to edge, including behind navigation. */
 .eye-opening,.eye-scene video{object-fit:cover;object-position:center}
 /* Keep the final video frame visible through a soft, translucent dissolve. */
