@@ -1,3 +1,5 @@
+import { createScrollVideo } from './scroll-video.js';
+
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -8,36 +10,36 @@ const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 let reduced = motionPreference.matches;
 try { if (localStorage.getItem('nova-motion')) reduced = localStorage.getItem('nova-motion') === 'reduced'; } catch {}
 let progress = 0, duration = 5, requestedTime = 0, secondDuration = 5, secondRequestedTime = 0;
-let eyeEndpoint = 5, timingData = null;
-function updateEyeDuration() {
-  if (!timingData) return;
-  const ratio = innerWidth / document.querySelector('.stage').clientHeight;
-  const stops = timingData.viewports || [];
-  let endpoint = timingData.endpoint;
-  if(stops.length) {
-    if(ratio <= stops[0].aspect) endpoint = stops[0].endpoint;
-    else if(ratio >= stops.at(-1).aspect) endpoint = stops.at(-1).endpoint;
-    else {const i=stops.findIndex(s=>s.aspect>=ratio),a=stops[i-1],b=stops[i]; endpoint=a.endpoint+(b.endpoint-a.endpoint)*(ratio-a.aspect)/(b.aspect-a.aspect);}
-  }
-  eyeEndpoint=endpoint;duration=Math.min(Number.isFinite(eye.duration)?eye.duration-1/(timingData.fps || 24):endpoint,endpoint);
+let mediaRefresh = 0;
+function refreshVideoFrame() {
+  if (mediaRefresh) return;
+  mediaRefresh = requestAnimationFrame(() => { mediaRefresh = 0; update(progress); });
 }
-fetch('/assets/kling-hero-timing.json').then(r => r.json()).then(data => { timingData = data; updateEyeDuration(); update(progress); }).catch(() => {});
+const firstVideo = createScrollVideo(eye, refreshVideoFrame);
+const secondVideo = createScrollVideo(eyeSecond, refreshVideoFrame);
+function updateEyeDuration() {
+  if (Number.isFinite(eye.duration)) duration = firstVideo.endpoint;
+  if (Number.isFinite(eyeSecond.duration)) secondDuration = secondVideo.endpoint;
+}
 const set = (s, values) => gsap.set(s, values);
 function seekEye(time) {
   requestedTime = clamp(time, 0, duration);
-  if (eye.readyState >= 1 && !eye.seeking && Math.abs(eye.currentTime - requestedTime) > 0.001) eye.currentTime = requestedTime;
+  firstVideo.seek(requestedTime);
 }
-eye.addEventListener('loadedmetadata', () => { updateEyeDuration(); seekEye(requestedTime); });
-eye.addEventListener('loadeddata', () => update(progress));
-eye.addEventListener('seeked', () => { if (Math.abs(eye.currentTime - requestedTime) > .001) seekEye(requestedTime); });
-eye.addEventListener('play', () => eye.pause());
-eyeSecond.addEventListener('loadedmetadata', () => { secondDuration = Number.isFinite(eyeSecond.duration) ? eyeSecond.duration : 5; seekSecond(secondRequestedTime); });
-eyeSecond.addEventListener('loadeddata', () => update(progress));
-eyeSecond.addEventListener('seeked', () => { if (Math.abs(eyeSecond.currentTime - secondRequestedTime) > .001) seekSecond(secondRequestedTime); });
-eyeSecond.addEventListener('play', () => eyeSecond.pause());
-eye.pause();
-eyeSecond.pause();
-function seekSecond(time) { secondRequestedTime = clamp(time, 0, secondDuration); if (eyeSecond.readyState >= 1 && !eyeSecond.seeking && Math.abs(eyeSecond.currentTime - secondRequestedTime) > .001) eyeSecond.currentTime = secondRequestedTime; }
+for (const video of [eye, eyeSecond]) {
+  video.addEventListener('loadedmetadata', () => { updateEyeDuration(); refreshVideoFrame(); });
+}
+function seekSecond(time) {
+  secondRequestedTime = clamp(time, 0, secondDuration);
+  secondVideo.seek(secondRequestedTime);
+}
+function primeVideos() {
+  if (!reduced) { firstVideo.prime(); secondVideo.prime(); }
+}
+// Safari may require a direct touch/click before it decodes paused video.
+for (const event of ['touchend', 'click', 'keydown']) {
+  document.addEventListener(event, primeVideos, {passive: true});
+}
 
 // One scroll coordinate owns all three acts. The next visual enters on the
 // exact eye endpoint, rather than after a second pin or a blank spacer.
@@ -48,9 +50,10 @@ function update(p) {
   // Give the final camera-facing frame a longer hold before section two.
   const secondProgress = clamp((p - .285) / .365);
   const sceneBlend = smooth((p - .285) / .055);
-  const eyeReady = eye.readyState >= 2;
-  const secondReady = eyeSecond.readyState >= 2;
-  set('.eye-opening', {autoAlpha: reduced || !eyeReady ? 1 : 1 - smooth((p - .02) / .05)});
+  const eyeReady = firstVideo.ready;
+  const secondReady = secondVideo.ready;
+  const openingOpacity = eyeReady ? 1 - smooth((p - .02) / .05) : 1 - (secondReady ? sceneBlend : 0);
+  set('.eye-opening', {autoAlpha: reduced ? 1 : openingOpacity});
   const hardwareIn = smooth((p - .65) / .065);
   const hardwareOut = smooth((p - .80) / .055);
   const portalIn = smooth((p - .84) / .055);
@@ -74,7 +77,7 @@ function update(p) {
   $('.act-label').textContent = p < .665 ? '01 — HUMAN PERCEPTION' : p < .82 ? '02 — PHYSICAL FORM' : '03 — PRODUCT DESIGN';
   $('.scene-count').textContent = p < .665 ? '01 / 03' : p < .82 ? '02 / 03' : '03 / 03';
   $('.scroll-hint').firstChild.textContent = p > .97 ? 'KEEP EXPLORING ' : 'SCROLL TO SEE BEYOND ';
-  window.novaState = {progress: p, videoTime: eye.currentTime, requestedTime, duration, paused: eye.paused, reduced, portalProgress: lensProgress, webgl: false};
+  window.novaState = {progress: p, videoTime: eye.currentTime, requestedTime, duration, paused: eye.paused, reduced, portalProgress: lensProgress, webgl: false, firstReady: eyeReady, secondReady, secondTime: eyeSecond.currentTime, secondRequestedTime};
 }
 gsap.registerPlugin(ScrollTrigger);
 // Allocate additional travel only to the design act, preserving earlier pacing.
@@ -95,6 +98,7 @@ function applyMotion() {
   $('#motion-toggle').setAttribute('aria-pressed', String(reduced));
   $('#motion-toggle').textContent = reduced ? 'Enable scroll motion' : 'Reduce motion';
   ScrollTrigger.refresh(); update(progress);
+  primeVideos();
 }
 $('#motion-toggle').addEventListener('click', () => { reduced = !reduced; try {localStorage.setItem('nova-motion', reduced ? 'reduced' : 'full');} catch {} applyMotion(); });
 motionPreference.addEventListener('change', e => { reduced = e.matches; applyMotion(); });
@@ -141,3 +145,6 @@ $$('[data-space]').forEach((button, index) => {
 window.addEventListener('resize', () => {updateEyeDuration();ScrollTrigger.refresh();update(progress);});
 document.addEventListener('visibilitychange', () => {if(!document.hidden) update(progress);});
 update(sceneProgress(journeyTrigger));
+
+updateEyeDuration();
+primeVideos();
