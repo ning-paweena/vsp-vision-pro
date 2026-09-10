@@ -1,0 +1,1 @@
+{"name":"nova-x2","private":true,"type":"module","scripts":{"dev":"node server.mjs","start":"node server.mjs","check":"node --check app.js && node --check server.mjs"},"dependencies":{"three":"^0.186.0"}}
