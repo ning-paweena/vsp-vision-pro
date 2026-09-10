@@ -144,3 +144,9 @@ em{font-family:inherit;font-style:normal;font-weight:400;letter-spacing:-.065em}
 .reduced .journey{height:280svh}
 #collection .intro-grid{margin-bottom:40px}
 #collection .intro-grid p:last-child{margin-bottom:0}
+/* Match the mobile silhouette caption to the other product details. */
+@media(max-width:600px){
+ #details .profile{background:transparent}
+ #details .profile figcaption{order:0;padding:24px 0 0;background:transparent}
+ #details .profile h3{font-size:22px;letter-spacing:-.6px;margin:15px 0 10px}
+}
