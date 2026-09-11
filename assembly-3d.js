@@ -34,8 +34,16 @@ try {
  slider.addEventListener('input',()=>{grid=false;all.setAttribute('aria-pressed','false');setAmount(+slider.value/100);});
  controls.querySelector('[data-assemble]').onclick=()=>{grid=false;all.setAttribute('aria-pressed','false');setAmount(0);};
  all.onclick=()=>{grid=!grid;all.setAttribute('aria-pressed',String(grid));setAmount(grid?1:0);};
- controls.querySelector('[data-reset]').onclick=()=>{yaw=-.6;pitch=.12;};
  let drag=null;const canvas=renderer.domElement;canvas.style.touchAction='pan-y';
+ controls.querySelector('[data-reset]').onclick=()=>{
+  // Restore every view control; the render loop eases parts and camera back home.
+  drag=null;
+  grid=false;
+  all.setAttribute('aria-pressed','false');
+  setAmount(0);
+  yaw=-.6;
+  pitch=.12;
+ };
  canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
  canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw+=(e.clientX-drag.x)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-drag.y)*.004,-.65,.65);drag={x:e.clientX,y:e.clientY};});
  canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
