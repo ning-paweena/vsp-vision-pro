@@ -153,7 +153,8 @@ h1 em{letter-spacing:inherit}
  #details .profile h3{font-size:22px;letter-spacing:-.6px;margin:15px 0 10px}
 }
 
-.human-picture video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%}
+.human-picture video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center 35%}
+@media(max-width:600px){.human-picture video{object-fit:contain}}
 
 /* Compact bilingual control with Thai typography tuned to the existing layout. */
 .language-switch{display:flex;align-items:center;gap:7px;margin-right:4px;font-size:11px;letter-spacing:.08em;white-space:nowrap}

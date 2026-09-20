@@ -100,6 +100,9 @@ function applyMotion() {
   $('#motion-toggle').textContent = reduced ? tr('enableMotion') : tr('reduceMotion');
   ScrollTrigger.refresh(); update(progress);
   primeVideos();
+  const human = $('.human-video');
+  // The looping human-element clip is decorative: hold it on its poster frame when motion is reduced.
+  if (human) { if (reduced) human.pause(); else human.play().catch(() => {}); }
 }
 $('#motion-toggle').addEventListener('click', () => { reduced = !reduced; try {localStorage.setItem('nova-motion', reduced ? 'reduced' : 'full');} catch {} applyMotion(); });
 motionPreference.addEventListener('change', e => { reduced = e.matches; applyMotion(); });
