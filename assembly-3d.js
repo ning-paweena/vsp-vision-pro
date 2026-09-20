@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three/three.module.js';
-const host=document.createElement('div');host.className='assembly-view';host.setAttribute('role','region');host.setAttribute('aria-label','VSP three-dimensional product reveal');
+const tr=key=>window.vspI18n?.t(key)??key;
+const host=document.createElement('div');host.className='assembly-view';host.setAttribute('role','region');host.setAttribute('aria-label',tr('assemblyAria'));
 const figure=document.querySelector('#collection .wide-image');figure.append(host);
 try {
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
@@ -30,6 +31,8 @@ try {
  const controls=document.createElement('div');controls.className='assembly-controls';controls.innerHTML='<button type="button" data-assemble>Assemble</button><label>Explode <output>0%</output><input type="range" min="0" max="100" value="0" aria-label="Explode VSP"></label><button type="button" data-pieces aria-pressed="false">All pieces</button><button type="button" data-reset>Reset view</button>';host.append(controls);
  const hint=document.createElement('p');hint.className='assembly-hint';hint.textContent='Drag to rotate · Explore the individual parts';host.append(hint);
  const slider=controls.querySelector('input'),output=controls.querySelector('output'),all=controls.querySelector('[data-pieces]');
+ function localizeAssembly(){host.setAttribute('aria-label',tr('assemblyAria'));controls.querySelector('[data-assemble]').textContent=tr('assemble');controls.querySelector('label').firstChild.textContent=tr('explode');slider.setAttribute('aria-label',tr('explodeAria'));all.textContent=tr('allPieces');controls.querySelector('[data-reset]').textContent=tr('reset');hint.textContent=tr('assemblyHint');}
+ window.addEventListener('vsp-languagechange',localizeAssembly);localizeAssembly();
  function setAmount(value){target=value;slider.value=Math.round(value*100);output.value=Math.round(value*100)+'%';}
  slider.addEventListener('input',()=>{grid=false;all.setAttribute('aria-pressed','false');setAmount(+slider.value/100);});
  controls.querySelector('[data-assemble]').onclick=()=>{grid=false;all.setAttribute('aria-pressed','false');setAmount(0);};

@@ -152,3 +152,18 @@ h1 em{letter-spacing:inherit}
  #details .profile figcaption{order:0;padding:24px 0 0;background:transparent}
  #details .profile h3{font-size:22px;letter-spacing:-.6px;margin:15px 0 10px}
 }
+
+/* Compact bilingual control with Thai typography tuned to the existing layout. */
+.language-switch{display:flex;align-items:center;gap:7px;margin-right:4px;font-size:11px;letter-spacing:.08em;white-space:nowrap}
+.language-switch button{appearance:none;border:0;background:none;color:inherit;padding:6px 2px;font:inherit;cursor:pointer;opacity:.48}
+.language-switch button.active{opacity:1}
+.language-switch span{opacity:.35}
+html[lang=th] body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Noto Sans Thai","Thonburi","Leelawadee UI",Arial,sans-serif}
+html[lang=th] .hero-copy h1{line-height:1.12}
+html[lang=th] .section h2,html[lang=th] .hardware-copy h2,html[lang=th] .portal-copy h2,html[lang=th] .human-copy h2{line-height:1.18}
+html[lang=th] .eyebrow,html[lang=th] .micro,html[lang=th] .stage-bottom,html[lang=th] .hardware-caption{letter-spacing:.08em}
+@media(max-width:600px){
+ .language-switch{margin-right:auto;gap:5px}
+ .language-switch button{padding:6px 1px}
+ .nav-actions{gap:8px}
+}

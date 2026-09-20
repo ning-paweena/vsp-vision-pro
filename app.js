@@ -2,6 +2,7 @@ import { createScrollVideo } from './scroll-video.js';
 
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+const tr = key => window.vspI18n?.t(key) ?? key;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = v => { v = clamp(v); return v * v * (3 - 2 * v); };
 const eye = $('#eye');
@@ -74,9 +75,9 @@ function update(p) {
   set('.portal-scene', {autoAlpha: portalIn});
   set('.portal-copy', {opacity: 1, y: reduced ? 0 : -12 * lensProgress});
   set('.progress-track div', {scaleX: p});
-  $('.act-label').textContent = p < .665 ? '01 — HUMAN PERCEPTION' : p < .82 ? '02 — PHYSICAL FORM' : '03 — PRODUCT DESIGN';
+  $('.act-label').textContent = p < .665 ? tr('actHuman') : p < .82 ? tr('actPhysical') : tr('actDesign');
   $('.scene-count').textContent = p < .665 ? '01 / 03' : p < .82 ? '02 / 03' : '03 / 03';
-  $('.scroll-hint').firstChild.textContent = p > .97 ? 'KEEP EXPLORING ' : 'SCROLL TO SEE BEYOND ';
+  $('.scroll-hint').firstChild.textContent = p > .97 ? tr('keep') : tr('scroll');
   window.novaState = {progress: p, videoTime: eye.currentTime, requestedTime, duration, paused: eye.paused, reduced, portalProgress: lensProgress, webgl: false, firstReady: eyeReady, secondReady, secondTime: eyeSecond.currentTime, secondRequestedTime};
 }
 gsap.registerPlugin(ScrollTrigger);
@@ -96,7 +97,7 @@ const journeyTrigger = ScrollTrigger.create({trigger: '.journey', start: 'top to
 function applyMotion() {
   document.body.classList.toggle('reduced', reduced);
   $('#motion-toggle').setAttribute('aria-pressed', String(reduced));
-  $('#motion-toggle').textContent = reduced ? 'Enable scroll motion' : 'Reduce motion';
+  $('#motion-toggle').textContent = reduced ? tr('enableMotion') : tr('reduceMotion');
   ScrollTrigger.refresh(); update(progress);
   primeVideos();
 }
@@ -122,25 +123,34 @@ $$('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
     window.scrollTo({top: scenePosition(marks[hash]), behavior: reduced ? 'instant' : 'smooth'});
     history.replaceState(null, '', hash);
   }
-  $('.nav').classList.remove('menu-open'); $('.menu-toggle').setAttribute('aria-expanded', 'false');
+  $('.nav').classList.remove('menu-open'); $('.menu-toggle').setAttribute('aria-expanded', 'false'); $('.menu-toggle').setAttribute('aria-label', tr('openMenu'));
 }));
-$('.menu-toggle').addEventListener('click', () => {const open = $('.nav').classList.toggle('menu-open'); $('.menu-toggle').setAttribute('aria-expanded', String(open));});
-document.addEventListener('keydown', e => {if(e.key === 'Escape') { $('.nav').classList.remove('menu-open'); $('.menu-toggle').setAttribute('aria-expanded', 'false'); }});
+$('.menu-toggle').addEventListener('click', () => {const open = $('.nav').classList.toggle('menu-open'); $('.menu-toggle').setAttribute('aria-expanded', String(open)); $('.menu-toggle').setAttribute('aria-label', tr(open ? 'closeMenu' : 'openMenu'));});
+document.addEventListener('keydown', e => {if(e.key === 'Escape') { $('.nav').classList.remove('menu-open'); $('.menu-toggle').setAttribute('aria-expanded', 'false'); $('.menu-toggle').setAttribute('aria-label', tr('openMenu')); }});
 
-const spaces = [{"src": "/assets/apple/theater-odyssey.png", "alt": "A man wearing VSP watching an Odyssey-inspired scene on a large virtual cinema screen", "eyebrow": "YOUR PERSONAL THEATER", "title": "A bigger way to watch.", "text": "Settle into your favorite seat. Let a sweeping screen turn an ordinary evening into a cinematic escape."}, {"src": "/assets/apple/workspace-experience.png", "alt": "A woman wearing VSP working at a desk with floating design and document windows", "eyebrow": "SPACE FOR YOUR IDEAS", "title": "Room to do more.", "text": "Bring your documents, designs, and ideas into view. Arrange your workspace around the way you think."}, {"src": "/assets/apple/family-experience.png", "alt": "A woman wearing VSP waving to her parents on a large virtual video call", "eyebrow": "CLOSER TO YOUR PEOPLE", "title": "Share the everyday.", "text": "A familiar smile. A story from home. Make room for the people you love, wherever they are."}];
+const spaces = [{src:'/assets/apple/theater-odyssey.png',alt:'A man wearing VSP watching an Odyssey-inspired scene on a large virtual cinema screen',eyebrow:'personalTheater',title:'theaterTitle',text:'theaterBody'},{src:'/assets/apple/workspace-experience.png',alt:'A woman wearing VSP working at a desk with floating design and document windows',eyebrow:'ideas',title:'workspaceTitle',text:'workspaceBody'},{src:'/assets/apple/family-experience.png',alt:'A woman wearing VSP waving to her parents on a large virtual video call',eyebrow:'people',title:'lovedTitle',text:'lovedBody'}];
+let selectedSpace = 0;
 function selectSpace(index, focus = false) {
   const data = spaces[index], panel = $('#space-panel');
+  selectedSpace = index;
   $$('[data-space]').forEach((button, i) => {button.setAttribute('aria-selected', String(i === index));button.tabIndex = i === index ? 0 : -1;});
   const selected = $(`[data-space="${index}"]`);
   panel.setAttribute('aria-labelledby', selected.id);
   $('img', panel).src = data.src; $('img', panel).alt = data.alt;
-  $('.eyebrow', panel).textContent = data.eyebrow; $('h3', panel).textContent = data.title; $('p', panel).textContent = data.text;
+  $('.eyebrow', panel).textContent = tr(data.eyebrow); $('h3', panel).textContent = tr(data.title); $('p', panel).textContent = tr(data.text);
   if (focus) selected.focus();
 }
 $$('[data-space]').forEach((button, index) => {
   button.addEventListener('click', () => selectSpace(index));
   button.addEventListener('keydown', e => {let next = index;if(e.key === 'ArrowRight') next = (index + 1) % 3;else if(e.key === 'ArrowLeft') next = (index + 2) % 3;else if(e.key === 'Home') next = 0;else if(e.key === 'End') next = 2;else return;e.preventDefault();selectSpace(next, true);});
 });
+window.addEventListener('vsp-languagechange', () => {
+  update(progress);
+  $('#motion-toggle').textContent = reduced ? tr('enableMotion') : tr('reduceMotion');
+  $('.menu-toggle').setAttribute('aria-label', tr($('.nav').classList.contains('menu-open') ? 'closeMenu' : 'openMenu'));
+  selectSpace(selectedSpace);
+});
+selectSpace(selectedSpace);
 // Product photographs remain stationary and fully framed during scrolling.
 window.addEventListener('resize', () => {updateEyeDuration();ScrollTrigger.refresh();update(progress);});
 document.addEventListener('visibilitychange', () => {if(!document.hidden) update(progress);});

@@ -1,5 +1,7 @@
 import * as THREE from './vendor/three/three.module.js';
-const host=document.createElement('div');host.className='product-3d';host.setAttribute('role','img');host.setAttribute('aria-label','VSP three-dimensional product reveal');
+const tr=key=>window.vspI18n?.t(key)??key;
+const host=document.createElement('div');host.className='product-3d';host.setAttribute('role','img');host.setAttribute('aria-label',tr('assemblyAria'));
+window.addEventListener('vsp-languagechange',()=>host.setAttribute('aria-label',tr('assemblyAria')));
 document.querySelector('.portal-scene').append(host);
 try {
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
