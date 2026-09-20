@@ -155,6 +155,13 @@ h1 em{letter-spacing:inherit}
 
 .human-picture video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center 35%}
 @media(max-width:600px){.human-picture:has(video){aspect-ratio:16/9}}
+.video-toggle{position:absolute;right:18px;bottom:18px;z-index:2;width:40px;height:40px;display:grid;place-items:center;padding:0;border:1px solid #ffffff5c;border-radius:50%;background:#0b0b0bb3;color:#fff;backdrop-filter:blur(10px);transition:background .25s,border-color .25s,transform .25s}
+.video-toggle:hover{background:#0b0b0be6;border-color:#ffffff96;transform:scale(1.06)}
+.video-toggle svg{width:15px;height:15px;display:block;fill:currentColor}
+.video-toggle .icon-play{display:none;margin-left:2px}
+.video-toggle.is-paused .icon-pause{display:none}
+.video-toggle.is-paused .icon-play{display:block}
+@media(max-width:600px){.video-toggle{right:12px;bottom:12px;width:36px;height:36px}}
 
 /* Compact bilingual control with Thai typography tuned to the existing layout. */
 .language-switch{display:flex;align-items:center;gap:7px;margin-right:4px;font-size:11px;letter-spacing:.08em;white-space:nowrap}

@@ -7,6 +7,8 @@ const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = v => { v = clamp(v); return v * v * (3 - 2 * v); };
 const eye = $('#eye');
 const eyeSecond = $('#eye-second');
+const humanVideo = $('#human-video');
+const humanToggle = $('.video-toggle');
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 let reduced = motionPreference.matches;
 try { if (localStorage.getItem('nova-motion')) reduced = localStorage.getItem('nova-motion') === 'reduced'; } catch {}
@@ -100,13 +102,28 @@ function applyMotion() {
   $('#motion-toggle').textContent = reduced ? tr('enableMotion') : tr('reduceMotion');
   ScrollTrigger.refresh(); update(progress);
   primeVideos();
-  const human = $('.human-video');
   // The looping human-element clip is decorative: hold it on its poster frame when motion is reduced.
-  if (human) { if (reduced) human.pause(); else human.play().catch(() => {}); }
+  if (humanVideo) { if (reduced) humanVideo.pause(); else humanVideo.play().catch(() => {}); }
 }
 $('#motion-toggle').addEventListener('click', () => { reduced = !reduced; try {localStorage.setItem('nova-motion', reduced ? 'reduced' : 'full');} catch {} applyMotion(); });
 motionPreference.addEventListener('change', e => { reduced = e.matches; applyMotion(); });
 applyMotion();
+
+// Drive the label off the video's own events, so it stays truthful when autoplay
+// is blocked or the reduce-motion toggle pauses the clip.
+if (humanVideo && humanToggle) {
+  const syncVideoToggle = () => {
+    humanToggle.classList.toggle('is-paused', humanVideo.paused);
+    humanToggle.setAttribute('aria-label', tr(humanVideo.paused ? 'playVideo' : 'pauseVideo'));
+  };
+  humanToggle.addEventListener('click', () => {
+    if (humanVideo.paused) humanVideo.play().catch(() => {}); else humanVideo.pause();
+  });
+  humanVideo.addEventListener('play', syncVideoToggle);
+  humanVideo.addEventListener('pause', syncVideoToggle);
+  window.addEventListener('vsp-languagechange', syncVideoToggle);
+  syncVideoToggle();
+}
 
 // Carry the same reveal language into the content sections after the product scene.
 const contentSections = $$('.section:not(.journey)');
